@@ -41,10 +41,8 @@ def gen_random_value():
     lastHalf = []
 
     # Hacked values
-    # lastHalf.append('3')
-    # lastHalf.append(random.choice(['3', '2']))
-    lastHalf.append('5')
-    lastHalf.append('5')
+    lastHalf.append('3')
+    lastHalf.append(random.choice(['3', '2']))
 
     for x in range(5):
         lastHalf.append(random.choice(checkSumValues))

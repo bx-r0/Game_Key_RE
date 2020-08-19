@@ -1,3 +1,4 @@
 FILES
 Ghidra
 __pycache__
+.vscode
