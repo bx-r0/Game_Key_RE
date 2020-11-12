@@ -4,7 +4,7 @@
 
 # Recon
 
-Using our good friend Resource Hacker (again), we can instantly see a dialog menu structured in a very familiar way:
+Using our good friend Resource Hacker, we can instantly see a dialog menu structured in a very familiar way:
 
 ![](../images/dialog.png)
 
