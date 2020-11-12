@@ -1,6 +1,8 @@
 # Diablo II RE
 
-## Recon
+![](../images/cover.jpg)
+
+# Recon
 
 Using our good friend Resource Hacker (again), we can instantly see a dialog menu structured in a very familiar way:
 
@@ -8,11 +10,17 @@ Using our good friend Resource Hacker (again), we can instantly see a dialog men
 
 Again, in a very similar way to Starcraft, we have some juicy strings we can use to find the key verification logic.
 
-## Key Validation Location
+![](../images/strings.png)
 
-The functionality for validating the name is exactly the same. (See the Starcraft write-up for any required details)
+As the strings are not stored inline, we can use the numerical values attached to the strings above to see where these are used.
 
-Now compared to Startcraft, the serial key has had a bit of an upgrade. It has been extended to 16 characters. Note, the use of the word 'character', that's right the key now includes characters as well as numbers.
+This leads us to the following logic:
+
+# Key Validation Location
+
+The functionality for validating the name is exactly the same. (See the Starcraft write-up for any required details). Essentially they check for a valid string, no numbers, no zero length strings. Very boring.
+
+Now compared to Starcraft, the serial key has had a bit of an upgrade. It has been extended to 16 characters. (Note the use of the word 'character' - that's right the key now includes characters as well as numbers)
 
 An example key can be seen below:
 
@@ -23,9 +31,9 @@ An example key can be seen below:
 ## Alphabet validation
 
 The first stop along the way is function `0x004146a0`. 
-Its purpose essentially is to validate that the characters in the entered key are in an allowed set, but it goes about it in an obscured way.
+This function essentially checks if each character in the entered key are in an allowed set. However, it goes about it in an interesting but obscured way.
 
-Some code can be seen below:
+Some Ghidra code can be seen below:
 
 ```c
 undefined4 CHECK_ALPHABET(byte *KEY_STR)
@@ -50,7 +58,7 @@ undefined4 CHECK_ALPHABET(byte *KEY_STR)
 }
 ```
 
-The code might seem a little all over the place, it has intentionally been made more dense on purpose and I have not spent long cleaning it up. 
+The code might seem a little all over the place. It has intentionally been made more dense on purpose and I have not spent long clearing it up. 
 
 All that really is important is the following lines:
 
@@ -61,7 +69,7 @@ if (0x17 < uVar2) break;
 
 The character value in `uVar2` is used as an index for the `DAT_0043f750` value.
 
-Looking in this memory we get the following dump of `0xff` bytes:
+Looking in `DAT_0043f750` we get the following dump of `0xff` bytes:
 
 ```
 0043F750  FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF
@@ -89,11 +97,11 @@ This is where the second line comes into play:
 if (0x17 < uVar2) break;
 ```
 
-If the returned value is greater than `0x17` (i.e. is `0xff`) the loop breaks and the program returns an invalid value. This is how the program checks if a character is valid!
+It uses the character's value as a index and checks what is returned from the chunky array.
 
-It uses the characters value as a index and checks what is returned from this chunky array.
+If the returned value is greater than `0x17` (i.e. is `0xff`) the loop breaks and the program returns an invalid status value.
 
-So for example the character `'A' == '0x41'`, this would give us the memory location `0x43f791` that gives us an `0xff` meaning this character is not valid.
+So, for example the character `'A' == '0x41'`, gives us the memory location `0x43f791`. This memory location returns `0xff`, resulting in an invalid character.
 
 Doing this for all values and checking what returns a non `0xff` value gives us the following alphabet:
 
@@ -105,24 +113,24 @@ This is an interesting way to hide a check for a valid alphabet.
 
 Anyway, moving on!
 
-## Key hash
+## Key Validation
 
-After the key passes the alphabet check, the key gets sort of hashed alongside the validation of a checksum byte. This byte is used in the final validation check.
+After the key passes the alphabet check, the key gets passed to the main validation logic.
 
-So, this stage can be split into two important sections:
+This stage can be split into two important sections:
 
     - Key 'hash'
     - Checksum byte generation
 
-### Hashing
+### Key 'hash'
 
-The hashing is actually quite simple. The program loops around the keys in pairs, obtains their mappings values from the big array at `0x43f750` and places them in the following calculation:
+The hashing is actually quite simple. The program loops around the keys in pairs, obtains their values from the alphabet check array (`DAT_0043f750`) and places them in the following calculation:
 
 ```
-x = map1 + map2 * 0x18
+x = MAP1 + MAP2 * 0x18
 ```
 
-This value is then saved as a two digit hex value in the original index of chars used.
+This result is then saved as a two digit hex value in place of the original pair.
 
 For example with a two character example:
 
@@ -139,14 +147,13 @@ x = 0x02 + 0x00 * 0x18
 x = 0x02
 ```
 
-Referring to this as 'hashing' is obviously absurd as this is trivially reversible, however, it is memorable and the result is used like a hash so 🤷‍♂️.
-
+Referring to this as 'hashing' is obviously absurd as this is trivially reversible, the result is used like a hash so *shrug*.
 
 ### Checksum byte generation
 
-While the above 'hashing' is occurring a parallel check is occurring. 
+Alongside the 'hashing' operation another check is also occurring. 
 
-Code is below: 
+Some python code of the overall operation is below: 
 
 ```python
 x = map1 + map2 * 0x18
@@ -159,11 +166,9 @@ if (0xff < x):
 y = y << 1
 ```
 
-So, if the value of `x` is higher than `0xff` we perform some operation on the variable `verification_byte`. Then we remove `0x100` from the value (This will be crucial later).
+So, if the value of `x` is higher than `0xff` we perform some operation on the variable `verification_byte`. Then we remove `0x100` from the value (Note this as it will be crucial later).
 
-Now, after some time it was observed that the `verification_byte` is being used a single flag of sorts. Let me explain.
-
-The computation `y = y << 1` is the giveaway line, it progressivly creates a binary value with more right hand zeros
+Now, after some time it was observed that the `verification_byte` is being used a flag variable.  The computation `y = y << 1` is the giveaway line, it progressively creates a binary value with more right hand zeros
 
 ```
 e.g
@@ -173,27 +178,27 @@ e.g
 1000
 ```
 
-This is then ORed agains the `verification_byte` thus marking the index of a pair that was above `0xff`. This byte is 8-bits in size, thus, being able to allocate a bit per pair.
+This is then ORed against the `verification_byte` thus, marking the index of a pair that was above `0xff`. This byte is 8-bits in size, thus, being able to allocate a bit per pair.
 
 For example if the 2nd and 6th pair are above `0xff` the value `y` will be `10` and `100000` respectively. Giving us the binary value
 
 ```
 00000000
-00000010
-00010000
+00000010 OR  (2nd)
+00100000 OR  (6th)
    ==
-00010010
+00100010
 ```
 
 Or
 ```
-0x12
+0x22
 ```
 This byte is used when checking in the next stage.
 
 ## Checksum
 
-We're getting there. This is the final key validation step.
+We're getting there - this is the final key validation step.
 
 This step is exactly the same as the overall key validation included in Starcraft. 
 
@@ -208,33 +213,35 @@ for k in key:
 return cs
 ```
 
-All it does is create a single byte checksum for the hashed key created in the previous section. It does its job, the order of the characters matter and it is not clear how to attack a value to give an expected value.
+All it does is create a single byte checksum for the hashed key created in the previous section. 
 
-Therefore, we will leave this section alone.
+It does its job, the order of the characters matter and it is not clear how to fix it to give an expected value. Therefore, when exploiting we will leave this section alone.
 
-The value produced from this is ANDed with `0xff` to produce a single byte, this is then compared to the `verification_byte` generated earlier.
+The value produced from this is ANDed with `0xff` (produces a single byte). This is then compared to the `verification_byte` generated earlier.
 
-If they match we have a valid key!
+**If they match, we have a valid key!**
 
 # How do we break it?
 
-Now the exploit for key gens here revolve around that `validation_byte` generation logic. Lets call the pairs that add a `1` to the `validation_byte` flag value, overflow pairs.
+Now the exploit for the key gen here revolves around that `validation_byte` generation logic. Lets call the pairs that add a `1` bit to the `validation_byte` flag value (` > 0xff`), **overflow pairs**.
 
-I start by generated a random hashed version of some key, I will later go backwards from this and find a key that could make this, but first we need to do a little calculation.
+I start by generating a random hashed version of some key. Later we'll go backwards from this and find a key that could make this hash, but first we need to do a little calculation.
 
-I then run the hashed version of the key through the checksum function to work out what byte is required to pass the check, lets say `0xa1` for the purpose of argument.
+I then run the hashed version of the key through the checksum function to work out what byte is required to pass the check. (Lets say `0xa1` for the purpose of argument)
 
 This value: `0xa1` is `10100001` in binary. Jumping back to our `validation_byte` generation logic, this means that the 1st, 6th and 8th pairs need to be greater than `0xff` for us to generate a correct key.
 
-This is where I will work backwards from this hash. I work through all valid characters until I find two characters that create the hashed pair, if they're in a position that was found from the `validation_byte` I add `0x100` to it (See the **Checksum byte generation** section) to create us an overflow pair. This changes the value of the `validation_byte` without changing the checksum value!
+This is where I will work backwards from this hash. I work through all valid characters until I find two characters that create the hashed pair, if they're in a position that was found from the `validation_byte` I add `0x100` to it (See the **Checksum byte generation** section) to create us an overflow pair in the correct location! This changes the value of the `validation_byte` without changing the checksum value. The checksum value is unaltered due to the subtraction of `0x100` before the checksum is calculated.
 
 This addition of `0x100` is the key operation, this will create us a key that generates the same checksum byte but a different `validation_byte` value. If we place the overflow pairs correctly we can get these values to match and have a valid key!
 
-This would create us valid keys if it wasn't for a little Blizzard trick, entering keys generated this was gives us this pop-up:
+This lets us create valid keys!
+
+Entering a generated key gives us this pop-up:
 
 ![](../images/another.png)
 
-This is strange lets investigate?
+This is strange lets investigate???
 
 # Other game check
 
@@ -244,7 +251,7 @@ Now, something I missed from the initial set of strings was the following:
 "You entered a CD-Key from a different product. Please check to ensure that you have entered the CD-Key from the right CD case."
 ```
 
-Blizzard seems to be performing the same validation check on all their keys but embedding something in them that can be used to distinguish them.
+Blizzard seems to be performing the same validation check on all their keys but embedding something that can be used to distinguish.
 
 The logic in question starts at `0x004148C0`
 
@@ -257,7 +264,7 @@ This happens up till line `0041496c`
 
 ## Shuffle
 
-The algorithm then seems to shuffle up the order of the intermediate key. This begins at `0041496c` with a loop between `00414973` --> `0041498c` that contains the majority of the logic.
+The algorithm then hashes the key again. This hash is then shuffled. This begins at `0041496c` with a loop between `00414973` --> `0041498c` that contains the majority of the logic.
 
 Some examples are below:
 ```
@@ -294,19 +301,19 @@ def shuffle_key(key):
     return "".join(key)
 ```
 
-The first byte is all we care about due to it being decoded and checked if it is either a `06` or `07`. This originates from the 6th and 7th character. 
+## Key decode
 
-## Key decode (TODO: Function PTR)
-
-The program then runs around a similar loop before loading a constant `0x13ac9741` into a variable
+The program then runs around a similar loop before loading a magic constant `0x13ac9741` into a variable
 
 The program loops through the key from right to left and alters the entire key
 
 This is the final step before 2 bytes are copied from this key into a return variable. Other bytes are written out but the front two are relevant for this code section.
 
-These front two bytes are used to determine if the code is from Diablo II and not another Blizzard game. We're looking for the front two values to equal either `06` or `07`.
+These front two bytes are used to determine if the key is from Diablo II and not another Blizzard game. 
 
-An overview of the code is below:
+We're looking for the front two values to equal either `06` or `07`.
+
+Some C-Ghida-hybrid code is displayed below:
 
 ```C
 i = 0xf;
@@ -350,7 +357,7 @@ The magic value embedded in the code is a constant `0x13ac9741`. At first glance
 The key code section is displayed below:
 
 ```c
-local_14[i] = magicValue & 7 ^ bVar6;
+key[i] = magicValue & 7 ^ key[i];
 magicValue = (magicValue >> 3);
 ```
 
@@ -372,7 +379,7 @@ This works because an AND operation of all ones (Which 7 in binary is) will just
 
 The value is then right shifted by 3 to remove the values we just utilised.
 
-Therefore, this magic value could be considered as a list of numbers! By taking each 3 bit chunk and converting it to a value we get the following array:
+Therefore, this magic value could be considered as a list of 3-bit numbers! By taking each 3 bit chunk and converting it to a value we get the following array:
 
 ```
 [1, 0, 5, 3, 1, 1, 3, 5, 3, 2]
@@ -388,14 +395,14 @@ Now, in summary of what we know so far:
 
 - The first two characters are used to define what game the program thinks the key is part of
 
-- The game value is created by the 6th and 7th character (See **Shuffle** section). This should equal `06` or `07`
+- The game value is created by the 6th and 7th character (See **Shuffle** section).
 
 
 Now, our end goal is to get the game check value to either `06` or `07`.
 
 The quantity of `0-7` will determine how far through the magic value list the program gets, therefore, what if when we create our hash we control how many of these value exist?
 
-For this attack we will have 9x `0-7` chars. This means the program will jump into the code section with code `magicNumber = magicNumber >> 3`.
+For this attack we will have 9x `0-7` chars. This means the program will jump into the code section with code `magicNumber = magicNumber >> 3` nine times.
 
 When we reach the values of interest will be this far into the list:
 
@@ -410,6 +417,6 @@ The order is due to us looping around the key backwards. This means if we want `
 
 If we control these values the program will reach the exact spot in the list and will use the values explained above to XOR the hash.
 
-This lets us manipulate the game check code! Thus letting us create a valid `Diablo II` key!
+This lets us manipulate the game check code, thus letting us create a valid `Diablo II` key!
 
-This could theoretically be used for the rest of the games if they use the same format.
+This could theoretically be used for the rest of Blizzard's games if they use the same format.

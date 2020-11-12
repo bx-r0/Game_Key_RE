@@ -125,6 +125,7 @@ function BOOL CDKeyCheck(local_string1, local_string2)
     end; // checksum: 71a4093c
 ```
 
+## Validate CD Key
 
 `ValidateCDKey`
 ```
@@ -263,6 +264,24 @@ function BOOL ValidateCDKey(local_string1)
    end; // checksum: fffca0d6
 ```
 
+Seems to check the length of the key against 20
+
+Converts any lowercase letters to upper case
+
+Then loops around each character and checks it against the alphabet of
+
+```
+248DEGJLMPQSTUWY
+```
+
+One important thing to note is the fact that this alphabet check is only peformed on the first 16 characters. For some reason the final set of 4 are not checked??
+
+## Verify CD Key
+
+Seems to just append all the params into some monster string?
+
+Maybe this appends all character chunks together?
+
 `VerifyCDKey5`
 ```
 function BOOL VerifyCDKey5(local_string1, local_string2, local_string3, local_string4, local_string5)
@@ -289,19 +308,33 @@ begin
    local_number1 = 0;
    local_number2 = 0;
    local_string2 = local_string1;
-   GetCRC(local_string2);
-   local_number4 = LASTRESULT;
+
+   // Gets some CRC??
+   local_number4 = GetCRC(local_string2);
+
+   // TODO: Then it does something with the CRC??
+   //       4 hex values mean its a CRC32? 
+   // Maybe this converts a number to string?
    function_815(local_string4, "%4x", local_number4);
    local_number3 = 0;
 label_107a3:
+
+   // `local_number3` is a counter
    local_number4 = (local_number3 <= 4);
    if(local_number4) then // ref index: 2
+
+      // Grabs character from CRC string
       local_number4 = local_string4[local_number3];
+
+      // If the char is a space it is converted into a 0
       local_number4 = (local_number4 = 32);
       if(local_number4) then // ref index: 1
          local_string4[local_number3] = 48;
       endif;
 label_107f7:
+
+      // For some reason it is copying the entire CRC string into another
+      // array
       local_number4 = local_string4[local_number3];
       local_string3[local_number3] = local_number4;
       local_number3 = (local_number3 + 1);
@@ -309,14 +342,31 @@ label_107f7:
    endif;
 label_1082b:
    local_string3[local_number3] = 0;
+
+   // TODO: What you do?
+   //    It is taking the same variable twice?
    function_811(local_string3, local_string3);
+
    local_number3 = 0;
 label_10854:
+
+   // Another loop
    local_number4 = (local_number3 <= 4);
    if(local_number4) then // ref index: 2
+
+      // Grabs a char from the CRC
       local_number4 = local_string3[local_number3];
+
+      // This seems to be a index for the final 
+      // block of chars 16 --> 20
       local_number5 = (16 + local_number3);
+
+      // This makes me believe `local_string2` is the
+      // key str
       local_number5 = local_string2[local_number5];
+
+      // It literally checks it against the CRC value :|
+      
       local_number4 = (local_number4 != local_number5);
       if(local_number4) then // ref index: 1
          local_number2 = 1;
@@ -340,4 +390,62 @@ label_1092c:
    return 0;
 label_1093b:
 end; // checksum: f20ee05
+```
+
+
+CRC
+```
+function NUMBER GetCRC(local_string1)
+           NUMBER local_number1, local_number2, local_number3, local_number4, local_number5, local_number6, local_number8, local_number9; 
+           STRING local_string2, local_string3; 
+begin
+   local_number1 = 0;
+   local_number3 = 0;
+   local_number4 = 40961;
+   local_number6 = 0;
+   local_number1 = local_number3;
+   local_number5 = 0;
+label_10121:
+   local_number9 = (local_number5 <= 15);
+   if(local_number9) then // ref index: 1
+      local_number9 = local_string1[local_number5];
+      local_string2[local_number5] = local_number9;
+      local_number5 = (local_number5 + 1);
+      goto label_10121;
+   endif;
+label_10170:
+   local_string2[local_number5] = 0;
+label_10181:
+   // switch/while/???
+   local_number9 = local_string2[local_number6];
+   local_number9 = (local_number9 != 0);
+   if(local_number9) then // ref index: 5
+      StrSub(local_string3, local_string2, local_number6, 1);
+      local_number6 = (local_number6 + 1);
+      function_818(local_string3);
+      local_number8 = LASTRESULT;
+      local_number1 = (local_number1 ^ local_number8);
+      local_number5 = 8;
+label_101fc:
+      local_number9 = (local_number5 >= 1);
+      if(local_number9) then // ref index: 3
+         local_number9 = (local_number1 & 1);
+         if(local_number9) then // ref index: 1
+            local_number2 = (local_number1 >> 1);
+            local_number1 = (local_number2 ^ local_number4);
+            goto label_1026a;
+         endif;
+label_10259:
+         local_number1 = (local_number1 >> 1);
+label_1026a:
+         local_number5 = (local_number5 - 1);
+         goto label_101fc;
+      endif;
+label_10284:
+      goto label_10181;
+   endif;
+label_1028f:
+   // return coming
+   return local_number1;
+end; // checksum: a3c912
 ```

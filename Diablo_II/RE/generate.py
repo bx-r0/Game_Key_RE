@@ -40,10 +40,11 @@ def gen_random_value():
 
     lastHalf = []
 
-    # Hacked values
+    # Hacked values will give us 06 or 07
     lastHalf.append('3')
     lastHalf.append(random.choice(['3', '2']))
 
+    # Last half x9 chars
     for x in range(5):
         lastHalf.append(random.choice(checkSumValues))
 

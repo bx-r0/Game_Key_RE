@@ -1,10 +1,6 @@
 from validation import createKeyHash
 
 def decode_key(key):
-    """
-    NOTE: Does not do anything to any alphabetic characters
-    """
-
     key = list(key)
 
     # Decoded: 0x13ac9741
@@ -40,10 +36,6 @@ def decode_key(key):
 
 def shuffle_key(key):
     """
-    This function seems to place the first and last pair in the center of the key
-
-    i.e
-
     GGGG-GGXX-YYGG-GGGG --> XXGG-GGGG-GGGG-GGYY
     """
 
@@ -66,6 +58,9 @@ def shuffle_key(key):
     return "".join(key)
 
 def test_number_count(key):
+    """
+    Counts number of values 0-7
+    """
 
     numberCount = 0
     for k in key:
@@ -87,8 +82,6 @@ def is_diablo_2_key(key):
 
     nC = test_number_count(keyHash)
 
-    # if keyHash[5] == '3' and keyHash[6] == '3':
-
     shuffle = shuffle_key(keyHash)
     code = decode_key(shuffle)
 
@@ -96,10 +89,3 @@ def is_diablo_2_key(key):
         return True
 
     return False
-
-
-# Notes: 
-#   
-#   - The 6th and 7th characters are used to determine the game type
-#   -   3 ^ 3     3 ^ 5
-#   - 

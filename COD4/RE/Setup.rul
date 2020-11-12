@@ -4466,9 +4466,17 @@ OBJECT global_object3, global_object4, global_object5, global_object6, global_ob
 @00010317:0008   label_10317:
 @00010319:000B      local_number7 = (local_number3 <= local_number6);
 @00010326:0004      if(local_number7) then // ref index: 20
+
+                       // Looping around each char in the string `local_string1`
 @00010332:001E         local_number1 = local_string1[local_number3];
+
+                       // a
 @0001033F:000C         local_number7 = (local_number1 >= 97);
+
+                       // A
 @0001034E:000B         local_number8 = (local_number1 <= 65);
+
+                       // toUpper()
 @0001035D:0019         local_number7 = (local_number7 = local_number8);
 @0001036A:0004         if(local_number7) then // ref index: 1
 @00010376:000F            local_number1 = (local_number1 - 32);
