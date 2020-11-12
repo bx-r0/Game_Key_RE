@@ -8,7 +8,7 @@ Using our good friend Resource Hacker, we can instantly see a dialog menu struct
 
 ![](../images/dialog.png)
 
-Again, in a very similar way to Starcraft, we have some juicy strings we can use to find the key verification logic.
+This output can be used to find some juicy strings we can use to find the start of the key verification logic.
 
 ![](../images/strings.png)
 
@@ -16,11 +16,54 @@ As the strings are not stored inline, we can use the numerical values attached t
 
 This leads us to the following logic:
 
+# Name validation
+
+Using the value `603` (`"Invalid Name"`) from ResourceHacker. This takes us to a couple of areas when the value is being pushed to the stack as a call param for `FUN_00402dd0`.
+
+`FUN_00402dd0` can be abstracted as a "resource" loading function.
+
+The following code has been adapted from Ghidra output:
+
+```C
+int VALIDATE_NAME_INPUT(char* *NAME_STR, HWND RESC_PTR)
+{
+  if (NAME_STR == 0x0) {
+    THROW_ERROR(0x57);
+    return 0;
+  }
+  uint strLen = lstrlenA(NAME_STR);
+  if (strLen == 0) {
+                    /* DISPLAYS: "You must enter a name to continue with installation." */
+    LOAD_RESOURCE(0x25b,0x25c,RESC_PTR);
+    return 0;
+  }
+  if (0x1f < strLen) {
+                    /* DISPLAYS: "Please enter a name that is less than 127 characters long." */
+    LOAD_RESOURCE(0x25b,0x25d,RESC_PTR);
+    return 0;
+  }
+  if (CONTAINS(NAME_STR,'\"') != 0x0) {
+                    /* DISPLAYS: "Please enter a name that does not contain quotes (\")." */
+    LOAD_RESOURCE(0x25b,0x25e,RESC_PTR);
+    return 0;
+  }
+  return 1;
+}
+```
+
+```
+Where: 
+
+LOAD_RESOURCE   == FUN_00402dd0
+CONTAINS        == FUN_00422a80
+THROW_ERROR     == FUN_0041696a
+```
+
+This validation is very standard, we cannot have a string longer than 127 and it must not contain a quote mark.
+
 # Key Validation Location
 
-The functionality for validating the name is exactly the same. (See the Starcraft write-up for any required details). Essentially they check for a valid string, no numbers, no zero length strings. Very boring.
-
-Now compared to Starcraft, the serial key has had a bit of an upgrade. It has been extended to 16 characters. (Note the use of the word 'character' - that's right the key now includes characters as well as numbers)
+Now compared to Starcraft, the serial key has had a bit of an upgrade. It has been extended to 16 characters as the key now includes characters as well as numbers.
 
 An example key can be seen below:
 
@@ -30,7 +73,7 @@ An example key can be seen below:
 
 ## Alphabet validation
 
-The first stop along the way is function `0x004146a0`. 
+The first stop along the way is function `FUN_004146A0`. 
 This function essentially checks if each character in the entered key are in an allowed set. However, it goes about it in an interesting but obscured way.
 
 Some Ghidra code can be seen below:
@@ -58,7 +101,7 @@ undefined4 CHECK_ALPHABET(byte *KEY_STR)
 }
 ```
 
-The code might seem a little all over the place. It has intentionally been made more dense on purpose and I have not spent long clearing it up. 
+The code might seem a little all over the place. It has intentionally been made more dense on purpose.
 
 All that really is important is the following lines:
 
@@ -69,7 +112,7 @@ if (0x17 < uVar2) break;
 
 The character value in `uVar2` is used as an index for the `DAT_0043f750` value.
 
-Looking in `DAT_0043f750` we get the following dump of `0xff` bytes:
+Looking in `DAT_0043f750` we get the following dump of `0xFF` bytes:
 
 ```
 0043F750  FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF
@@ -93,25 +136,23 @@ Looking in `DAT_0043f750` we get the following dump of `0xff` bytes:
 What is interesting is we have mostly `0xFF`s with a couple of values `0x00 --> 0x17` dotted around.
 
 This is where the second line comes into play:
-```
+```C
 if (0x17 < uVar2) break;
 ```
 
 It uses the character's value as a index and checks what is returned from the chunky array.
 
-If the returned value is greater than `0x17` (i.e. is `0xff`) the loop breaks and the program returns an invalid status value.
+If the returned value is greater than `0x17` (i.e. is `0xFF`) the loop breaks and the program returns an invalid status value.
 
-So, for example the character `'A' == '0x41'`, gives us the memory location `0x43f791`. This memory location returns `0xff`, resulting in an invalid character.
+So, for example the character `'A' == '0x41'`, gives us the memory location `0x43F791`. This memory location returns `0xFF`, resulting in an invalid character.
 
-Doing this for all values and checking what returns a non `0xff` value gives us the following alphabet:
+Doing this for all values and checking what returns a non `0xFF` value gives us the following alphabet:
 
 ```
 246789BCDEFGHJKMNPRTVWXZbcdefghjkmnprtvwxz
 ```
 
 This is an interesting way to hide a check for a valid alphabet.
-
-Anyway, moving on!
 
 ## Key Validation
 
@@ -156,6 +197,7 @@ Alongside the 'hashing' operation another check is also occurring.
 Some python code of the overall operation is below: 
 
 ```python
+# hash
 x = map1 + map2 * 0x18
 
 if (0xff < x):
@@ -178,9 +220,9 @@ e.g
 1000
 ```
 
-This is then ORed against the `verification_byte` thus, marking the index of a pair that was above `0xff`. This byte is 8-bits in size, thus, being able to allocate a bit per pair.
+This is then ORed against the `verification_byte` thus, marking the index of a pair that was above `0xFF`. This byte is 8-bits in size, thus, being able to allocate a bit per pair.
 
-For example if the 2nd and 6th pair are above `0xff` the value `y` will be `10` and `100000` respectively. Giving us the binary value
+For example if the 2nd and 6th pair are above `0xFF` the value `y` will be `10` and `100000` respectively. Giving us the binary value
 
 ```
 00000000
@@ -217,19 +259,19 @@ All it does is create a single byte checksum for the hashed key created in the p
 
 It does its job, the order of the characters matter and it is not clear how to fix it to give an expected value. Therefore, when exploiting we will leave this section alone.
 
-The value produced from this is ANDed with `0xff` (produces a single byte). This is then compared to the `verification_byte` generated earlier.
+The value produced from this is ANDed with `0xFF` (produces a single byte). This is then compared to the `verification_byte` generated earlier.
 
 **If they match, we have a valid key!**
 
 # How do we break it?
 
-Now the exploit for the key gen here revolves around that `validation_byte` generation logic. Lets call the pairs that add a `1` bit to the `validation_byte` flag value (` > 0xff`), **overflow pairs**.
+Now the exploit for the key gen here revolves around that `validation_byte` generation logic. Lets call the pairs that add a `1` bit to the `validation_byte` flag value (` > 0xFF`), **overflow pairs**.
 
 I start by generating a random hashed version of some key. Later we'll go backwards from this and find a key that could make this hash, but first we need to do a little calculation.
 
-I then run the hashed version of the key through the checksum function to work out what byte is required to pass the check. (Lets say `0xa1` for the purpose of argument)
+I then run the hashed version of the key through the checksum function to work out what byte is required to pass the check. (Lets say `0xA1` for the purpose of argument)
 
-This value: `0xa1` is `10100001` in binary. Jumping back to our `validation_byte` generation logic, this means that the 1st, 6th and 8th pairs need to be greater than `0xff` for us to generate a correct key.
+This value: `0xA1` is `10100001` in binary. Jumping back to our `validation_byte` generation logic, this means that the 1st, 6th and 8th pairs need to be greater than `0xFF` for us to generate a correct key.
 
 This is where I will work backwards from this hash. I work through all valid characters until I find two characters that create the hashed pair, if they're in a position that was found from the `validation_byte` I add `0x100` to it (See the **Checksum byte generation** section) to create us an overflow pair in the correct location! This changes the value of the `validation_byte` without changing the checksum value. The checksum value is unaltered due to the subtraction of `0x100` before the checksum is calculated.
 
