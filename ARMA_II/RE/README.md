@@ -8,15 +8,15 @@ AAAABBBBBCCCCCDDDDDEEEEE
 ```
 So, looking at the resources in the `Setup.exe` of the in the root of the ARMA II files gives us the dialog we're looking for:
 
-![](./images/dialog.png)
+![](../images/dialog.png)
 
 Running the `.exe` confirms our suspicions. As it instantly asks for the key:
 
-![](./images/key.png)
+![](../images/key.png)
 
 We also have an error message pop-up:
 
-![](./images/wrong.png)
+![](../images/wrong.png)
 
 We can use strings in these pop-ups to hopefully find the area we should begin looking in.
 
