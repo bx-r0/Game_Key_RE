@@ -1,3 +1,5 @@
+<img align="right" src="./images/cover.jpg" width=175></img>
+
 # ARMA II RE
 
 ```
