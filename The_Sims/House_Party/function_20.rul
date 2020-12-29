@@ -1,0 +1,119 @@
+function NUMBER function_20(KEY)
+@000079A3           NUMBER local_number1, local_number2, local_number3, local_number4, local_number5, local_number6, local_number7, local_number8, local_number9, local_number10, local_number11, local_number12, local_number13, local_number14, local_number15, local_number16; 
+@000079A3           STRING local_string2; 
+@000079A3
+@000079A3        begin
+@000079AC:0006      local_number1 = 0;
+@000079B8:0006      local_number2 = 0;
+@000079C4:0006      local_number3 = 0;
+@000079D0:0021      StrLength(KEY);
+@000079D9:0006      local_number4 = LASTRESULT;
+@000079E3:0006      local_number7 = 0;
+@000079EF:0006      local_number8 = 7;
+@000079FB:0006      local_number9 = 5;
+@00007A07:0006      local_number10 = -5;
+@00007A13:0006      local_number13 = 73;
+@00007A1F:0006      local_number14 = 79;
+@00007A2B:0006      local_number1 = 0;
+@00007A37:0006      local_number5 = local_number10;
+@00007A41:0006   label_7a41:
+@00007A43:0001      // switch/while/???
+@00007A47:0009      local_number15 = (local_number5 < local_number4);
+@00007A54:0004      if(local_number15) then // ref index: 7
+@00007A60:0006         local_number7 = 1;
+@00007A6C:0006         local_number6 = 1;
+@00007A78:000F         local_number15 = (local_number8 - 1);
+@00007A87:0005   label_7a87:
+@00007A89:000B         local_number16 = (local_number6 <= local_number15);
+@00007A96:0004         if(local_number16) then // ref index: 1
+@00007AA2:0010            local_number7 = (local_number7 * 10);
+@00007AB1:0007            local_number6 = (local_number6 + 1);
+@00007AC0:0005            goto label_7a87;
+@00007AC9:0006         endif;
+@00007AC9:0006   label_7ac9:
+@00007ACB:0006         local_number3 = 0;
+@00007AD7:0006         local_number11 = local_number4;
+@00007AE1:0007         local_number15 = (local_number5 + local_number8);
+@00007AEE:0009         local_number15 = (local_number15 < local_number11);
+@00007AFB:0004         if(local_number15) then // ref index: 1
+@00007B07:0007            local_number11 = (local_number5 + local_number8);
+@00007B14:0002         endif;
+@00007B14:0002   label_7b14:
+@00007B16:0006         local_number6 = local_number5;
+@00007B20:000F         local_number15 = (local_number11 - 1);
+@00007B2F:0008   label_7b2f:
+@00007B31:000B         local_number16 = (local_number6 <= local_number15);
+@00007B3E:0004         if(local_number16) then // ref index: 2
+@00007B4A:000C            local_number16 = (local_number6 >= 0);
+@00007B59:0004            if(local_number16) then // ref index: 1
+@00007B65:0029               StrSub(local_string2, KEY, local_number6, 1);
+@00007B77:002C               StrToNum(local_number12, local_string2);
+@00007B81:0010               local_number16 = (local_number12 * local_number7);
+@00007B8E:0007               local_number3 = (local_number3 + local_number16);
+@00007B9B:0003            endif;
+@00007B9B:0003   label_7b9b:
+@00007B9D:0011            local_number7 = (local_number7 / 10);
+@00007BAC:0007            local_number6 = (local_number6 + 1);
+@00007BBB:0005            goto label_7b2f;
+@00007BC4:0004         endif;
+@00007BC4:0004   label_7bc4:
+@00007BC6:0007         local_number1 = (local_number1 + local_number3);
+@00007BD3:0008         local_number1 = (local_number1 % local_number13);
+@00007BE0:0007         local_number5 = (local_number5 + local_number8);
+@00007BED:0005         goto label_7a41;
+@00007BF6:0003      endif;
+@00007BF6:0003   label_7bf6:
+@00007BF8:0010      local_number2 = (local_number1 * 100);
+@00007C07:0006      local_number1 = 0;
+@00007C13:0006      local_number5 = 0;
+@00007C1F:0006   label_7c1f:
+@00007C21:0001      // switch/while/???
+@00007C25:0009      local_number15 = (local_number5 < local_number4);
+@00007C32:0004      if(local_number15) then // ref index: 7
+@00007C3E:0006         local_number7 = 1;
+@00007C4A:0006         local_number6 = 1;
+@00007C56:000F         local_number15 = (local_number9 - 1);
+@00007C65:0005   label_7c65:
+@00007C67:000B         local_number16 = (local_number6 <= local_number15);
+@00007C74:0004         if(local_number16) then // ref index: 1
+@00007C80:0010            local_number7 = (local_number7 * 10);
+@00007C8F:0007            local_number6 = (local_number6 + 1);
+@00007C9E:0005            goto label_7c65;
+@00007CA7:0006         endif;
+@00007CA7:0006   label_7ca7:
+@00007CA9:0006         local_number3 = 0;
+@00007CB5:0006         local_number11 = local_number4;
+@00007CBF:0007         local_number15 = (local_number5 + local_number9);
+@00007CCC:0009         local_number15 = (local_number15 < local_number11);
+@00007CD9:0004         if(local_number15) then // ref index: 1
+@00007CE5:0007            local_number11 = (local_number5 + local_number9);
+@00007CF2:0002         endif;
+@00007CF2:0002   label_7cf2:
+@00007CF4:0006         local_number6 = local_number5;
+@00007CFE:000F         local_number15 = (local_number11 - 1);
+@00007D0D:0008   label_7d0d:
+@00007D0F:000B         local_number16 = (local_number6 <= local_number15);
+@00007D1C:0004         if(local_number16) then // ref index: 2
+@00007D28:000C            local_number16 = (local_number6 >= 0);
+@00007D37:0004            if(local_number16) then // ref index: 1
+@00007D43:0029               StrSub(local_string2, KEY, local_number6, 1);
+@00007D55:002C               StrToNum(local_number12, local_string2);
+@00007D5F:0010               local_number16 = (local_number12 * local_number7);
+@00007D6C:0007               local_number3 = (local_number3 + local_number16);
+@00007D79:0003            endif;
+@00007D79:0003   label_7d79:
+@00007D7B:0011            local_number7 = (local_number7 / 10);
+@00007D8A:0007            local_number6 = (local_number6 + 1);
+@00007D99:0005            goto label_7d0d;
+@00007DA2:0004         endif;
+@00007DA2:0004   label_7da2:
+@00007DA4:0007         local_number1 = (local_number1 + local_number3);
+@00007DB1:0008         local_number1 = (local_number1 % local_number14);
+@00007DBE:0007         local_number5 = (local_number5 + local_number9);
+@00007DCB:0005         goto label_7c1f;
+@00007DD4:0004      endif;
+@00007DD4:0004   label_7dd4:
+@00007DD6:0007      local_number2 = (local_number2 + local_number1);
+@00007DE3:0027      // return coming
+@00007DE7:0023      return local_number2;
+@00007DEE:0026   end; // checksum: fffed1c3

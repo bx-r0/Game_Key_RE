@@ -12,11 +12,7 @@ Running through the process gives us a window like so:
 
 Looking at the resources of `setup.exe` does not show us any sign that the logic is contain within.
 
-Using process hacker we can see that the `setup.exe` spawns a child process.
-
-<!-- <TODO: Image here> -->
-
-We can navigate to the file location where `setup.exe` unpacked all the resources.
+Using process hacker we can see that the `setup.exe` spawns a child process. We can navigate to the file location where `setup.exe` unpacked all the resources.
 
 We see something like so:
 
