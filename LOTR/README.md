@@ -2,9 +2,20 @@
 
 # Lord of the Rings RE
 
-## Recon
+`The Battle for Middle-earth_code.exe` - Key checking binary sourced from the
+Lord of the Rings Battle for Middle Earth CD.
 
-TODO
+## Program explanation
+
+TODO: Screenshots of the program
+
+## Initial steps
+
+TODO: How I found the key checking logic
+
+
+TODO: Below I will walk through each main section of the program
+
 
 ## Concat values
 
@@ -83,3 +94,9 @@ This function performs a lot of bit rotations
 ### CheckLength? - Step 4
 
 The program loops around and checks for a null byte
+
+
+
+## Extracted program
+
+TODO: Once the program is fully converted to Python explain here how I found the vuln in the algorithm
